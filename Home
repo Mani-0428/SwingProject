@@ -1,0 +1,87 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class Home extends JFrame {
+
+    public Home() {
+        // Set JFrame properties
+        setTitle("Student Management System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 500);
+        getContentPane().setLayout(null); // Manual positioning of components
+
+        // Title Label
+        JLabel title = new JLabel("STUDENT MANAGEMENT SYSTEM", SwingConstants.CENTER);
+        title.setBounds(50, 20, 500, 50);
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        title.setForeground(Color.PINK);
+        getContentPane().add(title);
+
+        // Buttons
+        JButton displayRecordButton = new JButton("DISPLAY RECORD");
+        displayRecordButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		StudentDetails1 st = new StudentDetails1();
+        		st.setVisible(true);
+        		dispose();
+        	}
+        });
+        displayRecordButton.setBounds(70, 100, 200, 50);
+
+        JButton customizedDisplayButton = new JButton("CUSTOMISED DISPLAY");
+        customizedDisplayButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		CustomDetails cm = new CustomDetails();
+        		cm.setVisible(true);
+        	}
+        });
+        customizedDisplayButton.setBounds(330, 100, 200, 50);
+
+        JButton deleteRecordButton = new JButton("DELETE RECORD");
+        deleteRecordButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		Delete d = new Delete();
+        		d.setVisible(true);
+        	}
+        });
+        deleteRecordButton.setBounds(70, 200, 200, 50);
+
+        JButton insertRecordButton = new JButton("INSERT RECORD");
+        insertRecordButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		Insertion in = new Insertion();
+        		in.setVisible(true);
+        	}
+        });
+        insertRecordButton.setBounds(330, 200, 200, 50);
+
+        JButton updateRecordButton = new JButton("UPDATE RECORD");
+        updateRecordButton.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		update up = new update();
+        		up.setVisible(true);
+        	}
+        });
+        updateRecordButton.setBounds(200, 300, 200, 50);
+
+        // Add Buttons to JFrame
+        getContentPane().add(displayRecordButton);
+        getContentPane().add(customizedDisplayButton);
+        getContentPane().add(deleteRecordButton);
+        getContentPane().add(insertRecordButton);
+        getContentPane().add(updateRecordButton);
+
+        // Set JFrame background color
+        getContentPane().setBackground(Color.GRAY);
+
+        // Make JFrame visible
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        // Create the JFrame
+        new Home();
+    }
+}
