@@ -1,0 +1,126 @@
+import java.awt.EventQueue;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+
+public class Delete extends JFrame {
+
+    private static final long serialVersionUID = 1L;
+    private JPanel contentPane;
+    private JTextField textField;
+    private JTextField textField_1;
+
+    /**
+     * Launch the application.
+     */
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    Delete frame = new Delete();
+                    frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * Create the frame.
+     */
+    public Delete() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 450, 300);
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        setContentPane(contentPane);
+        contentPane.setLayout(null);
+
+        JLabel lblNewLabel = new JLabel("   Delete");
+        lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        lblNewLabel.setBounds(175, 31, 84, 25);
+        contentPane.add(lblNewLabel);
+
+        textField = new JTextField();
+        textField.setBounds(135, 92, 86, 20);
+        contentPane.add(textField);
+        textField.setColumns(10);
+
+        JLabel lblNewLabel_1 = new JLabel("   ID:");
+        lblNewLabel_1.setBounds(65, 95, 46, 14);
+        contentPane.add(lblNewLabel_1);
+
+        JButton btnNewButton = new JButton("Delete");
+        btnNewButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String id = textField.getText(); // Get ID from the first text field
+                if (!id.isEmpty()) {
+                    deleteRecord(id); // Call method to delete the record
+                } else {
+                    JOptionPane.showMessageDialog(contentPane, "ID cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        btnNewButton.setBounds(132, 209, 89, 23);
+        contentPane.add(btnNewButton);
+
+        JButton btnNewButton_1 = new JButton("Back");
+        btnNewButton_1.setBounds(289, 209, 89, 23);
+        btnNewButton_1.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Home hm = new Home();
+				hm.setVisible(true);
+				dispose();
+				
+			}
+		}); // Close window on "Back"
+        contentPane.add(btnNewButton_1);
+
+        textField_1 = new JTextField();
+        textField_1.setBounds(136, 154, 200, 20);
+        contentPane.add(textField_1);
+        textField_1.setColumns(10);
+    }
+
+    /**
+     * Method to delete a record from the database by ID and show result.
+     */
+    private void deleteRecord(String id) {
+     try {
+  Class.forName("com.mysql.cj.jdbc.Driver");
+  } catch (ClassNotFoundException e) {
+  // TODO Auto-generated catch block
+  e.printStackTrace();
+  }
+    String url = "jdbc:mysql://localhost:3306/kodstudent"; // Replace with your DB URL
+         String username = "root"; // Replace with your DB username
+         String password = "root";
+         String query = "DELETE FROM studentdetails WHERE stu_id = ?";
+
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, Integer.parseInt(id)); // Set the ID for deletion
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                textField_1.setText("Record with ID " + id + " deleted successfully.");
+            } else {
+                textField_1.setText("No record found with ID " + id + ".");
+            }
+
+        } catch (Exception ex) {
+            textField_1.setText("Error: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+}
