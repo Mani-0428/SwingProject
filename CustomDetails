@@ -1,0 +1,141 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class CustomDetails extends JFrame {
+    private JTextField idField;
+    private JCheckBox idCheckbox, nameCheckbox, classCheckbox, marksCheckbox, genderCheckbox;
+    private JTable resultTable;
+    private DefaultTableModel tableModel;
+
+    public CustomDetails() {
+        setTitle("Student Details");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 500);
+        setLayout(new BorderLayout());
+
+        // Input Panel
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Input Details"));
+
+        JLabel idLabel = new JLabel("Enter Student ID:");
+        idField = new JTextField(10);
+        inputPanel.add(idLabel);
+        inputPanel.add(idField);
+
+        // Checkbox Panel
+        JPanel checkboxPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        checkboxPanel.setBorder(BorderFactory.createTitledBorder("Select Details to Show"));
+
+        idCheckbox = new JCheckBox("ID");
+        nameCheckbox = new JCheckBox("Name");
+        classCheckbox = new JCheckBox("Class");
+        marksCheckbox = new JCheckBox("Marks");
+        genderCheckbox = new JCheckBox("Gender");
+
+        checkboxPanel.add(idCheckbox);
+        checkboxPanel.add(nameCheckbox);
+        checkboxPanel.add(classCheckbox);
+        checkboxPanel.add(marksCheckbox);
+        checkboxPanel.add(genderCheckbox);
+
+        // Add Input and Checkbox Panels to the Frame
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(inputPanel, BorderLayout.WEST);
+        topPanel.add(checkboxPanel, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);
+
+        // Table to Display Results
+        tableModel = new DefaultTableModel();
+        resultTable = new JTable(tableModel);
+        JScrollPane tableScrollPane = new JScrollPane(resultTable);
+        add(tableScrollPane, BorderLayout.CENTER);
+
+        // Bottom Panel with Buttons
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        JButton showDetailsButton = new JButton("Show Details");
+        JButton backButton = new JButton("Back");
+
+        bottomPanel.add(showDetailsButton, BorderLayout.WEST);
+        bottomPanel.add(backButton, BorderLayout.EAST);
+        bottomPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        // Action Listeners
+        showDetailsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showDetails();
+            }
+        });
+
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Home hm = new Home();
+                hm.setVisible(true);
+                dispose();
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void showDetails() {
+        String studentId = idField.getText().trim();
+        if (studentId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a Student ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Clear previous table data
+        tableModel.setRowCount(0);
+        tableModel.setColumnCount(0);
+
+        // Prepare selected columns
+        if (idCheckbox.isSelected()) tableModel.addColumn("ID");
+        if (nameCheckbox.isSelected()) tableModel.addColumn("Name");
+        if (classCheckbox.isSelected()) tableModel.addColumn("Class");
+        if (marksCheckbox.isSelected()) tableModel.addColumn("Marks");
+        if (genderCheckbox.isSelected()) tableModel.addColumn("Gender");
+
+        if (tableModel.getColumnCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Please select at least one detail to show.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Fetch data from the database
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/kodstudent", "root", "root");
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM studentdetails WHERE stu_id = ?")) {
+
+            stmt.setString(1, studentId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Object[] rowData = new Object[tableModel.getColumnCount()];
+                int index = 0;
+
+                if (idCheckbox.isSelected()) rowData[index++] = rs.getString("stu_id");
+                if (nameCheckbox.isSelected()) rowData[index++] = rs.getString("stu_name");
+                if (classCheckbox.isSelected()) rowData[index++] = rs.getString("stu_class");
+                if (marksCheckbox.isSelected()) rowData[index++] = rs.getInt("stu_mark");
+                if (genderCheckbox.isSelected()) rowData[index++] = rs.getString("stu_gender");
+
+                tableModel.addRow(rowData);
+            } else {
+                JOptionPane.showMessageDialog(this, "No data found for the given ID.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new CustomDetails());
+    }
+}
