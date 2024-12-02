@@ -1,0 +1,179 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+
+public class update extends JFrame {
+    private JTextField idField, updateField;
+    private JComboBox<String> updateFieldCombo;
+    private JTable resultTable;
+    private DefaultTableModel tableModel;
+
+    public update() {
+        setTitle("Student Details Management");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        getContentPane().setLayout(new BorderLayout(10, 10));
+
+        // Input Panel (Top Left)
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Enter Student ID"));
+
+        JLabel idLabel = new JLabel("Student ID:");
+        idField = new JTextField(10);
+        inputPanel.add(idLabel);
+        inputPanel.add(idField);
+
+        // Combo Box for selecting field to update
+        JLabel updateLabel = new JLabel("Select Field to Update:");
+        updateFieldCombo = new JComboBox<>(new String[] {"Select", "Name", "Class", "Mark", "Gender"});
+        updateField = new JTextField(10);
+        inputPanel.add(updateLabel);
+        inputPanel.add(updateFieldCombo);
+        inputPanel.add(updateField);
+
+        // Combine Input and Checkbox Panels
+        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        topPanel.add(inputPanel, BorderLayout.WEST);
+        getContentPane().add(topPanel, BorderLayout.NORTH);
+
+        // Show Details Button
+        JButton showDetailsButton = new JButton("Show Details");
+        showDetailsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fetchAndDisplayDetails();
+            }
+        });
+        getContentPane().add(showDetailsButton, BorderLayout.CENTER);
+
+        // Table for Results
+        tableModel = new DefaultTableModel();
+        resultTable = new JTable(tableModel);
+        JScrollPane tableScrollPane = new JScrollPane(resultTable);
+        tableScrollPane.setBorder(BorderFactory.createTitledBorder("Student Details"));
+        getContentPane().add(tableScrollPane, BorderLayout.CENTER);
+
+        // Update and Back Buttons
+        JButton updateButton = new JButton("Update");
+        updateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateStudentDetails();
+            }
+        });
+
+        JButton backButton = new JButton("Back");
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               Home hm = new Home();
+               hm.setVisible(true);
+               dispose();
+            }
+        });
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(updateButton, BorderLayout.WEST);
+        bottomPanel.add(backButton, BorderLayout.EAST);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        getContentPane().add(bottomPanel, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    private void fetchAndDisplayDetails() {
+        String studentId = idField.getText().trim();
+        if (studentId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a Student ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Clear previous table data
+        tableModel.setRowCount(0);
+        tableModel.setColumnCount(0);
+
+        // Add columns for the table
+        tableModel.addColumn("ID");
+        tableModel.addColumn("Name");
+        tableModel.addColumn("Class");
+        tableModel.addColumn("Mark");
+        tableModel.addColumn("Gender");
+
+        // Fetch data from the database
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/kodstudent", "root", "root");
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM studentdetails WHERE stu_id = ?")) {
+
+            stmt.setString(1, studentId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Object[] rowData = new Object[5];
+                rowData[0] = rs.getString("stu_id");
+                rowData[1] = rs.getString("stu_name");
+                rowData[2] = rs.getString("stu_class");
+                rowData[3] = rs.getInt("stu_mark");
+                rowData[4] = rs.getString("stu_gender");
+
+                tableModel.addRow(rowData);
+            } else {
+                JOptionPane.showMessageDialog(this, "No data found for the given ID.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateStudentDetails() {
+        String studentId = idField.getText().trim();
+        String selectedField = (String) updateFieldCombo.getSelectedItem();
+        String newValue = updateField.getText().trim();
+
+        if (studentId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a Student ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (selectedField.equals("Select")) {
+            JOptionPane.showMessageDialog(this, "Please select a field to update.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (newValue.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a new value.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Determine SQL column based on selection
+        String column = "";
+        if (selectedField.equals("Name")) column = "stu_name";
+        else if (selectedField.equals("Class")) column = "stu_class";
+        else if (selectedField.equals("Marks")) column = "stu_mark";
+        else if (selectedField.equals("Gender")) column = "stu_gender";
+
+        // Update data in the database
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/kodstudent", "root", "root");
+             PreparedStatement stmt = conn.prepareStatement("UPDATE studentdetails SET " + column + " = ? WHERE stu_id = ?")) {
+
+            stmt.setString(1, newValue);
+            stmt.setString(2, studentId);
+
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                JOptionPane.showMessageDialog(this, "Student details updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                fetchAndDisplayDetails(); // Re-fetch and display updated details
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update student details.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new update());
+    }
+}
